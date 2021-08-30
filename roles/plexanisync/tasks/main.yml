@@ -1,0 +1,51 @@
+#########################################################################
+# Title:            Community: PlexAniSync                              #
+# Author(s):        asdf                                                #
+# URL:              https://github.com/Cloudbox/Community               #
+# Docker Image(s):  rickdb/plexanisync                                  #
+# --                                                                    #
+#         Part of the Cloudbox project: https://cloudbox.works          #
+#########################################################################
+#                   GNU General Public License v3.0                     #
+#########################################################################
+---
+- name: Stop and remove any existing container
+  docker_container:
+    name: plexanisync
+    state: absent
+
+- name: Create plexanisync directory
+  file: "path={{ item }} state=directory mode=0775 owner={{ user.name }} group={{ user.name }} recurse=yes"
+  with_items:
+      - /opt/plexanisync
+
+- name: Settings | Import Plex Auth Token role
+  import_role:
+    name: plex_auth_token
+  when: plex_account_enabled
+
+- name: Create and start container
+  docker_container:
+    name: plexanisync
+    image: "rickdb/plexanisync"
+    pull: yes
+    env:
+      TZ: "{{ tz }}"
+      PUID: "{{ uid }}"
+      PGID: "{{ gid }}"
+      PLEX_SECTION: Anime
+      PLEX_URL: "http://plex:32400"
+      PLEX_TOKEN: "{{ plex_auth_token | default('') }}"
+      ANI_USERNAME: jarajara
+      ANI_TOKEN: "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6ImUzNTJhMzA2ZGJhMWFmZWE5YTZiYWI5YzJkMDU5YTEyMjE4ZjA5NWM1YjNjYTRmODA1ZmY3MmRhMmRmOGIxMDEwNDZiOWJkMzVkODg3OTc0In0.eyJhdWQiOiIxNTQ5IiwianRpIjoiZTM1MmEzMDZkYmExYWZlYTlhNmJhYjljMmQwNTlhMTIyMThmMDk1YzViM2NhNGY4MDVmZjcyZGEyZGY4YjEwMTA0NmI5YmQzNWQ4ODc5NzQiLCJpYXQiOjE2MTQ2NDM3MzksIm5iZiI6MTYxNDY0MzczOSwiZXhwIjoxNjQ2MTc5NzM5LCJzdWIiOiIxMzUwNzEiLCJzY29wZXMiOltdfQ.u0unZr_aMXw6dru-gJ_B6du5WB3gWBo_6cRN3HLgbw7jVmqVDBK3PcfHEhZu9v88JCQJ_ge8F9ee80doLypz-qzzU7afkWwRXZmL1wo7xHp3f26kr6YzODYJBGD-4-q6iJnNkGdHKSYFMaMQUfoNKJbgloxaMKDxRBvB48anCGznrY5sw3aONoIhlQnF2ovqa8NWSr0y2LUOCLJ47cPXfPI3qFMDpg8qsLjpYU3G8PMMKhYq40p3BssWAfRf2FLZw1j3V6UYbn9XvFBAcP57Oh8TptomPMsMlgo1MR8OzsCdnwzwr8s7n--KsHIzlYjqYbHGKauKh-WUkkYzSxt_YUpcJSx8-yRLV-Qri62eoRch9KlTvmfujZNDKLFi_T-tZIQA-ed3tKRxqN0BhbpVkQM8R35FQ5rt9JhQtvQBNCO1FPCr3nequFCqdOk6qB7_nXNXcryPcMD81JDPFvOjykz2GODhbRRk5eRZ16LmdfK_zIuV3CIbP4vO7ECK4abXG2OSjMbKAMgcKjfHSKiTBs5pvHgBQPvtLiI97DnxM_ndIbss6z9ntHVW7yyx059ZW_moC26de1zRm0zOygYJ7LtlQdRWW7jH78AAe8pAtD4ebzkkKyoYhC2zyVzIzGEkIJYrT_wijEniMUe77eLkjZzoHGiLGv-FYOXalDuvcuI"
+      INTERVAL: 3600
+    volumes:
+      - "/opt/plexanisync/custom_mappings.yaml:/plexanisync/custom_mappings.yaml"
+      - "/etc/localtime:/etc/localtime:ro"
+    networks:
+      - name: cloudbox
+        aliases:
+          - plexanisync
+    purge_networks: yes
+    restart_policy: unless-stopped
+    state: started

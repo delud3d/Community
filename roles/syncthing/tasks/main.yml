@@ -1,24 +1,24 @@
 #########################################################################
-# Title:            Community: Autoscan                                 #
-# Author(s):        Salty                                               #
+# Title:            Community: Syncthing                                #
+# Author(s):        asdf                                                #
 # URL:              https://github.com/Cloudbox/Community               #
-# Docker Image(s):  cloudb0x/autoscan                                   #
+# Docker Image(s):  syncthing/syncthing                                 #
 # --                                                                    #
 #         Part of the Cloudbox project: https://cloudbox.works          #
 #########################################################################
 #                   GNU General Public License v3.0                     #
 #########################################################################
 ---
-- name: "Setting CloudFlare DNS Record"
+- name: "Set DNS Record on CloudFlare"
   include_role:
     name: cloudflare-dns
   vars:
-    record: autoscan
+    record: syncthing
   when: cloudflare_enabled
 
 - name: Stop and remove any existing container
   docker_container:
-    name: autoscan
+    name: syncthing
     state: absent
 
 - name: Create htpasswd
@@ -30,47 +30,40 @@
     group: "{{ user.name }}"
     mode: 0664
   with_items:
-    - autoscan
+    - syncthing
 
-
-- name: Create autoscan directories
-  file: "path={{ item }} state=directory mode=0775 owner={{ user.name }} group={{ user.name }}"
+- name: Create syncthing directory
+  file: "path={{ item }} state=directory mode=0775 owner={{ user.name }} group={{ user.name }} recurse=yes"
   with_items:
-    - /opt/autoscan
-
-- name: "Look for 'config.yml' file in autoscan folder"
-  stat:
-    path: "/opt/autoscan/config.yml"
-  register: autoscan_config
-
-- name: "Fail when 'config.yml' is not present"
-  fail:
-    msg: "You need to setup your config file. https://github.com/Cloudbox/autoscan"
-  when: (not autoscan_config.stat.exists) and (not continuous_integration)
+      - /opt/syncthing/config
+      - /mnt/local/Sync
 
 - name: Create and start container
   docker_container:
-    name: autoscan
-    image: cloudb0x/autoscan
+    name: syncthing
+    image: "syncthing/syncthing"
     pull: yes
+    published_ports:
+      - "127.0.0.1:8384:8384"
+      - 22000:22000/tcp
+      - 22000:22000/udp
     env:
       TZ: "{{ tz }}"
       PUID: "{{ uid }}"
       PGID: "{{ gid }}"
-      VIRTUAL_HOST: "autoscan.{{ user.domain }}"
-      VIRTUAL_PORT: "3030"
-      LETSENCRYPT_HOST: "autoscan.{{ user.domain }}"
+      VIRTUAL_HOST: "syncthing.{{ user.domain }}"
+      VIRTUAL_PORT: "8384"
+      LETSENCRYPT_HOST: "syncthing.{{ user.domain }}"
       LETSENCRYPT_EMAIL: "{{ user.email }}"
+      STGUIADDRESS: "0.0.0.0:8384"
     volumes:
-      - "/opt/autoscan:/config"
-      - "/mnt:/mnt:ro"
-      - "/mnt/unionfs/Media:/data:ro"
-    labels:
-      "com.github.cloudbox.cloudbox_managed": "true"
+      - "/mnt:/var/syncthing/mnt"
+      - "/opt/syncthing/config:/var/syncthing/config"
+      - "/mnt/local/Sync:/var/syncthing/Sync"
     networks:
       - name: cloudbox
         aliases:
-          - autoscan
+          - syncthing
     purge_networks: yes
     restart_policy: unless-stopped
     state: started

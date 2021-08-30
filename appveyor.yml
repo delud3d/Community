@@ -120,6 +120,7 @@ environment:
     stash
     subsonic
     synclounge
+    syncthing
     tdarr
     telegraf
     thelounge
