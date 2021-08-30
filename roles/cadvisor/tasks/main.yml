@@ -1,0 +1,39 @@
+#########################################################################
+# Title:            Community: cadvisor                                 #
+# Author(s):        asdf                                                #
+# URL:              https://github.com/Cloudbox/Community               #
+# Docker Image(s):  gcr.io/cadvisor/cadvisor                            #
+# --                                                                    #
+#         Part of the Cloudbox project: https://cloudbox.works          #
+#########################################################################
+#                   GNU General Public License v3.0                     #
+#########################################################################
+---
+- name: Stop and remove any existing container
+  docker_container:
+    name: cadvisor
+    state: absent
+
+- name: Create and start container
+  docker_container:
+    name: cadvisor
+    image: "gcr.io/cadvisor/cadvisor"
+    pull: yes
+    published_ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:ro"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker/:/var/lib/docker:ro"
+      - "/dev/disk/:/dev/disk:ro"
+    privileged: yes
+    devices:
+      - "/dev/kmsg:/dev/kmsg:ro"
+    networks:
+      - name: cloudbox
+        aliases:
+          - cadvisor
+    purge_networks: yes
+    restart_policy: unless-stopped
+    state: started

@@ -28,6 +28,7 @@
     - { role: bookstack, tags: ['bookstack'] }
     - { role: btrfsmaintenance, tags: ['btrfsmaintenance'] }
     - { role: calibre, tags: ['calibre'] }
+    - { role: cadvisor, tags: ['cadvisor'] }
     - { role: calibre-web, tags: ['calibre-web'] }
     - { role: changedetection, tags: ['changedetection'] }
     - { role: coder, tags: ['coder'] }
@@ -50,6 +51,7 @@
     - { role: filebrowser, tags: ['filebrowser'] }
     - { role: filezilla, tags: ['filezilla'] }
     - { role: firefly, tags: ['firefly'] }
+    - { role: fireqos, tags: ['fireqos'] }
     - { role: flaresolverr, tags: ['flaresolverr'] }
     - { role: funkwhale, tags: ['funkwhale'] }
     - { role: gazee, tags: ['gazee'] }
@@ -78,12 +80,14 @@
     - { role: medusa, tags: ['medusa'] }
     - { role: minecraft, tags: ['minecraft'] }
     - { role: mkvtoolnix, tags: ['mkvtoolnix'] }
+    - { role: minecraft-backup, tags: ['minecraft-backup'] }
     - { role: monitorr, tags: ['monitorr'] }
     - { role: moviematch, tags: ['moviematch'] }
     - { role: mylar, tags: ['mylar'] }
     - { role: mylar3, tags: ['mylar3'] }
     - { role: navidrome, tags: ['navidrome'] }
     - { role: nextcloud, tags: ['nextcloud'] }
+    - { role: node-exporter, tags: ['node-exporter'] }
     - { role: nowshowing, tags: ['nowshowing'] }
     - { role: nzbhydra, tags: ['nzbhydra'] }
     - { role: ombix, tags: ['ombix'] }
@@ -95,10 +99,12 @@
     - { role: petio, tags: ['petio'] }
     - { role: phantombot, tags: ['phantombot'] }
     - { role: plex2, tags: ['plex2'] }
+    - { role: plexanisync, tags: ['plexanisync'] }
     - { role: plex-auto-collections, tags: ['plex-auto-collections'] }
     - { role: plex-meta-manager, tags: ['plex-meta-manager'] }
     - { role: postgres, tags: ['postgres'] }
     - { role: prowlarr, tags: ['prowlarr'] }
+    - { role: prometheus, tags: ['prometheus'] }
     - { role: pyload, tags: ['pyload'] }
     - { role: qbittorrent, tags: ['qbittorrent'] }
     - { role: qbittorrentvpn, tags: ['qbittorrentvpn'] }
@@ -121,6 +127,7 @@
     - { role: stash, tags: ['stash'] }
     - { role: subsonic, tags: ['subsonic'] }
     - { role: synclounge, tags: ['synclounge'] }
+    - { role: syncthing, tags: ['syncthing'] }
     - { role: tdarr, tags: ['tdarr'] }
     - { role: telegraf, tags: ['telegraf'] }
     - { role: telly, tags: ['telly'] }
@@ -135,7 +142,10 @@
     - { role: vscode, tags: ['vscode'] }
     - { role: watchtower, tags: ['watchtower'] }
     - { role: wallabag, tags: ['wallabag'] }
+    - { role: wireguard, tags: ['wireguard'] }
     - { role: wordpress, tags: ['wordpress'] }
     - { role: xbackbone, tags: ['xbackbone'] }
     - { role: xteve, tags: ['xteve'] }
+    - { role: varroa, tags: ['varroa'] }
+    - { role: varroa-better, tags: ['varroa-better'] }
     - { role: znc, tags: ['znc'] }

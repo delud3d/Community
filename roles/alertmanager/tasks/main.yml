@@ -1,0 +1,39 @@
+#########################################################################
+# Title:            Community: alertmanager                             #
+# Author(s):        svenz                                               #
+# URL:              https://github.com/Cloudbox/Community               #
+# Docker Image(s):  prom/alertmanager                                   #
+# --                                                                    #
+#         Part of the Cloudbox project: https://cloudbox.works          #
+#########################################################################
+#                   GNU General Public License v3.0                     #
+#########################################################################
+---
+- name: Stop and remove any existing container
+  docker_container:
+    name: node-exporter
+    state: absent
+
+- name: Create node-exporter directory
+  file: "path={{ item }} state=directory mode=0775 owner={{ user.name }} group={{ user.name }} recurse=yes"
+  with_items:
+      - /opt/node-exporter
+
+- name: Create and start container
+  docker_container:
+    name: node-exporter
+    image: "prom/node-exporter"
+    pull: yes
+    command:
+      - '--path.rootfs=/host'
+      - '--web.listen-address="{{ ansible_docker0.ipv4.address }}:9100"'
+      - '--collector.systemd'
+      - '--collector.processes'
+      - '--collector.qdisc'
+    pid_mode: host
+    network_mode: host
+    volumes:
+      - '/:/host:ro,rslave'
+    purge_networks: yes
+    restart_policy: unless-stopped
+    state: started

@@ -1,0 +1,56 @@
+#########################################################################
+# Title:            Community: wireguard                                #
+# Author(s):        asdf                                                #
+# URL:              https://github.com/Cloudbox/Community               #
+# Docker Image(s):   linuxserver/wireguard                              #
+# --                                                                    #
+#         Part of the Cloudbox project: https://cloudbox.works          #
+#########################################################################
+#                   GNU General Public License v3.0                     #
+#########################################################################
+---
+- name: "Set DNS Record on CloudFlare"
+  include_role:
+    name: cloudflare-dns
+  vars:
+    record: wireguard
+  when: cloudflare_enabled
+
+- name: Stop and remove any existing container
+  docker_container:
+    name: wireguard
+    state: absent
+
+- name: Create wireguard directory
+  file: "path={{ item }} state=directory mode=0775 owner={{ user.name }} group={{ user.name }} recurse=yes"
+  with_items:
+      - /opt/wireguard
+
+- name: Create and start container
+  docker_container:
+    name: wireguard
+    image: "linuxserver/wireguard"
+    pull: yes
+    published_ports:
+      - 51820:51820/udp
+    sysctls:
+      net.ipv4.conf.all.src_valid_mark: 1
+    capabilities:
+      - NET_ADMIN
+      - SYS_MODULE
+    env:
+      TZ: "{{ tz }}"
+      PUID: "{{ uid }}"
+      PGID: "{{ gid }}"
+      PEERS: mypc
+      SERVERURL: "wireguard.{{ user.domain }}"
+    volumes:
+      - "/opt/wireguard:/config"
+      - "/lib/modules:/lib/modules"
+    networks:
+      - name: cloudbox
+        aliases:
+          - wireguard
+    purge_networks: yes
+    restart_policy: unless-stopped
+    state: started

@@ -1,24 +1,24 @@
 #########################################################################
-# Title:            Community: Autoscan                                 #
-# Author(s):        Salty                                               #
+# Title:            Community: varroa                                   #
+# Author(s):        asdf                                                #
 # URL:              https://github.com/Cloudbox/Community               #
-# Docker Image(s):  cloudb0x/autoscan                                   #
+# Docker Image(s):  varroa                                              #
 # --                                                                    #
 #         Part of the Cloudbox project: https://cloudbox.works          #
 #########################################################################
 #                   GNU General Public License v3.0                     #
 #########################################################################
 ---
-- name: "Setting CloudFlare DNS Record"
+- name: "Set DNS Record on CloudFlare"
   include_role:
     name: cloudflare-dns
   vars:
-    record: autoscan
+    record: syncthing
   when: cloudflare_enabled
 
 - name: Stop and remove any existing container
   docker_container:
-    name: autoscan
+    name: varroa
     state: absent
 
 - name: Create htpasswd
@@ -30,47 +30,39 @@
     group: "{{ user.name }}"
     mode: 0664
   with_items:
-    - autoscan
+    - varroa
 
-
-- name: Create autoscan directories
-  file: "path={{ item }} state=directory mode=0775 owner={{ user.name }} group={{ user.name }}"
+- name: Create varroa directory
+  file: "path={{ item }} state=directory mode=0775 owner={{ user.name }} group={{ user.name }} recurse=yes"
   with_items:
-    - /opt/autoscan
+      - /opt/varroa
 
-- name: "Look for 'config.yml' file in autoscan folder"
-  stat:
-    path: "/opt/autoscan/config.yml"
-  register: autoscan_config
-
-- name: "Fail when 'config.yml' is not present"
-  fail:
-    msg: "You need to setup your config file. https://github.com/Cloudbox/autoscan"
-  when: (not autoscan_config.stat.exists) and (not continuous_integration)
-
+# Relies on building varroa locally
 - name: Create and start container
   docker_container:
-    name: autoscan
-    image: cloudb0x/autoscan
-    pull: yes
+    name: varroa
+    image: "passelecasque/varroa:v34"
+    pull: no
+    user: "{{ uid }}:{{ gid }}"
+    published_ports:
+      - "127.0.0.1:1234:1234"
     env:
       TZ: "{{ tz }}"
       PUID: "{{ uid }}"
       PGID: "{{ gid }}"
-      VIRTUAL_HOST: "autoscan.{{ user.domain }}"
-      VIRTUAL_PORT: "3030"
-      LETSENCRYPT_HOST: "autoscan.{{ user.domain }}"
+      VIRTUAL_HOST: "varroa.{{ user.domain }}"
+      VIRTUAL_PORT: "1234"
+      LETSENCRYPT_HOST: "varroa.{{ user.domain }}"
       LETSENCRYPT_EMAIL: "{{ user.email }}"
     volumes:
-      - "/opt/autoscan:/config"
-      - "/mnt:/mnt:ro"
-      - "/mnt/unionfs/Media:/data:ro"
-    labels:
-      "com.github.cloudbox.cloudbox_managed": "true"
+      - "/opt/varroa:/config"
+      - "/mnt/local/downloads/torrents/deluge/watched:/watch"
+      - "/mnt/local/downloads/torrents/deluge/completed:/downloads"
     networks:
       - name: cloudbox
         aliases:
-          - autoscan
+          - varroa
     purge_networks: yes
     restart_policy: unless-stopped
-    state: started
+    # manually start it
+    state: stopped

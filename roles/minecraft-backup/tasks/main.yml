@@ -1,60 +1,45 @@
 #########################################################################
-# Title:            Community: Minecraft Server                         #
-# Author(s):        atilling                                            #
+# Title:            Community: Minecraft Backup                         #
+# Author(s):        svenz                                               #
 # URL:              https://github.com/Cloudbox/Community               #
-# Docker Image(s):  itzg/minecraft-server                               #
+# Docker Image(s):  itzg/mc-backup                                      #
 # --                                                                    #
 #         Part of the Cloudbox project: https://cloudbox.works          #
 #########################################################################
 #                   GNU General Public License v3.0                     #
 #########################################################################
 ---
-- name: "Setting CloudFlare DNS Record"
-  include_role:
-    name: cloudflare-dns
-  vars:
-    record: minecraft
-  when: cloudflare_enabled
-
 - name: Stop and remove any existing container
   docker_container:
-    name: minecraft
+    name: minecraft-backup
     state: absent
 
-- name: Create minecraft directories
+- name: Create backup directories
   file: "path={{ item }} state=directory mode=0775 owner={{ user.name }} group={{ user.name }}"
   with_items:
-    - /opt/minecraft
+    - /opt/minecraft/backups
 
 - name: Create and start container
   docker_container:
-    name: minecraft
-    image: itzg/minecraft-server:latest
+    name: minecraft-backup
+    image: itzg/mc-backup
     pull: yes
-    published_ports:
-      - "25565:25565"
-      - "127.0.0.1:25575:25575"
     env:
       TZ: "{{ tz }}"
       UID: "{{ uid }}"
       GID: "{{ gid }}"
-      EULA: "TRUE"
-      ENABLE_ROLLING_LOGS: true
-      TYPE: "PAPER"
-      ENABLE_AUTOPAUSE: true
-      INIT_MEMORY: "512m"
-      MAX_MEMORY: "4g"
-      JVM_XX_OPTS: ""
-      JVM_DD_OPTS: "disable.watchdog:true"
+      PRUNE_BACKUPS_DAYS: 10
+      RCON_HOST: minecraft
     volumes:
       - "/etc/localtime:/etc/localtime:ro"
-      - "/opt/minecraft/data:/data"
+      - "/opt/minecraft/data:/data:ro"
+      - "/opt/minecraft/backups:/backups"
     labels:
       "com.github.cloudbox.cloudbox_managed": "true"
     networks:
       - name: cloudbox
         aliases:
-          - minecraft
+          - minecraft-backup
     purge_networks: yes
     restart_policy: unless-stopped
     state: started

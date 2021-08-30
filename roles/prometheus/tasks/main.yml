@@ -1,0 +1,79 @@
+#########################################################################
+# Title:            Community: prometheus                               #
+# Author(s):        asdf                                                #
+# URL:              https://github.com/Cloudbox/Community               #
+# Docker Image(s):  prometheus/prometheus                               #
+# --                                                                    #
+#         Part of the Cloudbox project: https://cloudbox.works          #
+#########################################################################
+#                   GNU General Public License v3.0                     #
+#########################################################################
+---
+- name: "Set DNS Record on CloudFlare"
+  include_role:
+    name: cloudflare-dns
+  vars:
+    record: prometheus
+  when: cloudflare_enabled
+
+- name: Stop and remove any existing container
+  docker_container:
+    name: prometheus
+    state: absent
+
+- name: Create htpasswd
+  htpasswd:
+    path: "/opt/nginx-proxy/htpasswd/{{ item }}.{{ user.domain }}"
+    name: "{{ user.name }}"
+    password: "{{ user.pass }}"
+    owner: "{{ user.name }}"
+    group: "{{ user.name }}"
+    mode: 0664
+  with_items:
+    - prometheus
+
+- name: Create prometheus directory
+  file: "path={{ item }} state=directory mode=0775 owner={{ user.name }} group={{ user.name }} recurse=yes"
+  with_items:
+      - /opt/prometheus
+      - /mnt/local/prometheus
+
+- name: Copy default prometheus.yml
+  copy:
+    force: no
+    src: prometheus.yml
+    dest: /opt/prometheus/
+
+- name: Create and start container
+  docker_container:
+    name: prometheus
+    image: "prom/prometheus"
+    pull: yes
+    command:
+      - "--web.external-url=https://prometheus.{{ user.domain }}"
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+    published_ports:
+      - "127.0.0.1:9090:9090"
+    user: "{{ uid }}:{{ gid }}"
+    env:
+      TZ: "{{ tz }}"
+      PUID: "{{ uid }}"
+      PGID: "{{ gid }}"
+      VIRTUAL_HOST: "prometheus.{{ user.domain }}"
+      VIRTUAL_PORT: "9090"
+      LETSENCRYPT_HOST: "prometheus.{{ user.domain }}"
+      LETSENCRYPT_EMAIL: "{{ user.email }}"
+    volumes:
+      - "/opt/prometheus:/etc/prometheus:ro"
+      - "/mnt/local/prometheus:/prometheus"
+      - "/etc/localtime:/etc/localtime:ro"
+    networks:
+      - name: cloudbox
+        aliases:
+          - prometheus
+    purge_networks: yes
+    etc_hosts:
+      host.docker.internal: host-gateway
+    restart_policy: unless-stopped
+    state: started

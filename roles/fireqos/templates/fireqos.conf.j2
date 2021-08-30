@@ -1,0 +1,53 @@
+DEVICE={{ ansible_default_ipv4.interface }}
+INPUT_SPEED=970mbit
+OUTPUT_SPEED=970mbit
+
+interface $DEVICE wan-in input rate $INPUT_SPEED
+   class interactive
+       match udp port 53
+       match tcp port 22
+       match icmp
+
+   class vpn
+       match udp dport 51820
+
+   class nginx
+       match tcp dports 443,80
+
+   class synacks
+       match tcp syn
+       match tcp ack
+
+   class default
+
+   clone rclone-download commit 200mbit
+       match tcp sport 443
+
+   class bulk
+       match dport 56881    # qbittorrent
+       match sport 1337     # qbittorrentvpn - wireguard port
+
+interface $DEVICE wan-out output rate $OUTPUT_SPEED
+   class interactive
+       match udp port 53
+       match tcp port 22
+       match icmp
+
+   class vpn
+       match udp sport 51820
+
+   class nginx commit 200mbit
+       match tcp sports 443,80
+
+   class synacks
+       match tcp syn
+       match tcp ack
+
+   class default
+
+   class rclone-upload
+       match tcp dport 443
+
+   class bulk
+       match sport 56881    # qbittorrent
+       match dport 1337     # qbittorrentvpn - wireguard port

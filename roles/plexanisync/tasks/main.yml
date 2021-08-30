@@ -1,0 +1,51 @@
+#########################################################################
+# Title:            Community: PlexAniSync                              #
+# Author(s):        asdf                                                #
+# URL:              https://github.com/Cloudbox/Community               #
+# Docker Image(s):  rickdb/plexanisync                                  #
+# --                                                                    #
+#         Part of the Cloudbox project: https://cloudbox.works          #
+#########################################################################
+#                   GNU General Public License v3.0                     #
+#########################################################################
+---
+- name: Stop and remove any existing container
+  docker_container:
+    name: plexanisync
+    state: absent
+
+- name: Create plexanisync directory
+  file: "path={{ item }} state=directory mode=0775 owner={{ user.name }} group={{ user.name }} recurse=yes"
+  with_items:
+      - /opt/plexanisync
+
+- name: Settings | Import Plex Auth Token role
+  import_role:
+    name: plex_auth_token
+  when: plex_account_enabled
+
+- name: Create and start container
+  docker_container:
+    name: plexanisync
+    image: "ghcr.io/rickdb/plexanisync:latest"
+    pull: yes
+    env:
+      TZ: "{{ tz }}"
+      PUID: "{{ uid }}"
+      PGID: "{{ gid }}"
+      PLEX_SECTION: Anime
+      PLEX_URL: "http://plex:32400"
+      PLEX_TOKEN: "{{ plex_auth_token | default('') }}"
+      ANI_USERNAME: jarajara
+      ANI_TOKEN: "{{ plexanisync.anilist_token | default('') }}"
+      INTERVAL: 3600
+    volumes:
+      - "/opt/plexanisync/custom_mappings.yaml:/plexanisync/custom_mappings.yaml"
+      - "/etc/localtime:/etc/localtime:ro"
+    networks:
+      - name: cloudbox
+        aliases:
+          - plexanisync
+    purge_networks: yes
+    restart_policy: unless-stopped
+    state: started
