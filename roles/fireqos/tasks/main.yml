@@ -1,0 +1,19 @@
+- name: Install fireqos
+  apt:
+    state: present
+    name: fireqos
+
+- name: Install configuration
+  template:
+    src: fireqos.conf.j2
+    dest: /etc/firehol/fireqos.conf
+
+- name: Enable it
+  copy:
+    src: etc_default_fireqos
+    dest: /etc/default/fireqos
+
+- name: Restart fireqos
+  systemd:
+    name: fireqos
+    state: restarted

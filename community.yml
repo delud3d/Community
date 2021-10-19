@@ -51,6 +51,7 @@
     - { role: filebrowser, tags: ['filebrowser'] }
     - { role: filezilla, tags: ['filezilla'] }
     - { role: firefly, tags: ['firefly'] }
+    - { role: fireqos, tags: ['fireqos'] }
     - { role: flaresolverr, tags: ['flaresolverr'] }
     - { role: funkwhale, tags: ['funkwhale'] }
     - { role: gazee, tags: ['gazee'] }
