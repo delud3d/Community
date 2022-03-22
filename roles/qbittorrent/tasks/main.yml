@@ -60,7 +60,7 @@
 - name: Create and start container
   docker_container:
     name: qbittorrent
-    image: sc4h/qbittorrent
+    image: hotio/qbittorrent
     pull: yes
     published_ports:
       - "56881:56881"
