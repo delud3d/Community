@@ -26,6 +26,7 @@
     - { role: bitwarden, tags: ['bitwarden'] }
     - { role: booksonic, tags: ['booksonic'] }
     - { role: bookstack, tags: ['bookstack'] }
+    - { role: bragibooks, tags: ['bragibooks'] }
     - { role: btrfsmaintenance, tags: ['btrfsmaintenance'] }
     - { role: calibre, tags: ['calibre'] }
     - { role: cadvisor, tags: ['cadvisor'] }
@@ -107,6 +108,7 @@
     - { role: prometheus, tags: ['prometheus'] }
     - { role: pyload, tags: ['pyload'] }
     - { role: qbittorrent, tags: ['qbittorrent'] }
+    - { role: qbittorrentvpn0, tags: ['qbittorrentvpn0'] }
     - { role: qbittorrentvpn, tags: ['qbittorrentvpn'] }
     - { role: quassel, tags: ['quassel'] }
     - { role: radarrx, tags: ['radarrx'] }

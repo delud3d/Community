@@ -1,0 +1,67 @@
+#########################################################################
+# Title:            Community: bragibooks                               #
+# Author(s):        asdf                                                #
+# URL:              https://github.com/Cloudbox/Community               #
+# Docker Image(s):  ghcr.io/djdembeck/bragibooks                        #
+# --                                                                    #
+#         Part of the Cloudbox project: https://cloudbox.works          #
+#########################################################################
+#                   GNU General Public License v3.0                     #
+#########################################################################
+---
+- name: "Set DNS Record on CloudFlare"
+  include_role:
+    name: cloudflare-dns
+  vars:
+    record: bragibooks
+  when: cloudflare_enabled
+
+- name: Stop and remove any existing container
+  docker_container:
+    name: bragibooks
+    state: absent
+
+- name: Create bragibooks directory
+  file: "path={{ item }} state=directory mode=0775 owner={{ user.name }} group={{ user.name }} recurse=yes"
+  with_items:
+      - /opt/bragibooks
+
+- name: Create htpasswd
+  htpasswd:
+    path: "/opt/nginx-proxy/htpasswd/{{ item }}.{{ user.domain }}"
+    name: "{{ user.name }}"
+    password: "{{ user.pass }}"
+    owner: "{{ user.name }}"
+    group: "{{ user.name }}"
+    mode: 0664
+  with_items:
+    - bragibooks
+
+- name: Create and start container
+  docker_container:
+    name: bragibooks
+    #image: "ghcr.io/djdembeck/bragibooks:main"
+    #pull: yes
+    image: bragibooks:local
+    env:
+      TZ: "{{ tz }}"
+      UID: "{{ uid }}"
+      GID: "{{ gid }}"
+      VIRTUAL_HOST: "bragibooks.{{ user.domain }}"
+      VIRTUAL_PORT: "8000"
+      LETSENCRYPT_HOST: "bragibooks.{{ user.domain }}"
+      LETSENCRYPT_EMAIL: "{{ user.email }}"
+      LOG_LEVEL: "WARNING"
+      CSRF_TRUSTED_ORIGINS: "https://bragibooks.{{ user.domain }}"
+    volumes:
+      - "/opt/bragibooks:/config"
+      - "/mnt/unionfs/downloads/torrents/qbittorrent/completed/Audiobooks/input:/input"
+      - "/mnt/unionfs/Media/Audiobooks:/output"
+      - "/etc/localtime:/etc/localtime:ro"
+    networks:
+      - name: cloudbox
+        aliases:
+          - bragibooks
+    purge_networks: yes
+    restart_policy: unless-stopped
+    state: started
